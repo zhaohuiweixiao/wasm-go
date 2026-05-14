@@ -199,12 +199,18 @@ func redisCallInternal(cluster Cluster, respQuery []byte, callback RedisResponse
 				}
 			}
 
-			// Check for NOAUTH error and retry if possible
+			// Check for authentication error and retry if possible.
+			// Redis may return "NOAUTH Authentication required" or
+			// "ERR Protocol error: unauthenticated multibulk length" when
+			// the underlying TCP connection has been recycled (e.g. after an
+			// Envoy cluster config update that drains the connection pool)
+			// and the new connection lacks AUTH state.
 			shouldInvokeCallback := true
 			if responseValue.Error() != nil && readyPtr != nil && checkReadyFunc != nil {
 				errMsg := responseValue.Error().Error()
-				if bytes.Contains([]byte(errMsg), []byte("NOAUTH Authentication required")) {
-					proxywasm.LogWarnf("redis authentication required, request-id: %s, marking client as not ready and attempting re-authentication", requestID)
+				if bytes.Contains([]byte(errMsg), []byte("NOAUTH Authentication required")) ||
+					bytes.Contains([]byte(errMsg), []byte("unauthenticated")) {
+					proxywasm.LogWarnf("redis authentication lost, request-id: %s, error: %s, marking client as not ready and attempting re-authentication", requestID, errMsg)
 					*readyPtr = false
 
 					// Try to re-authenticate
