@@ -142,8 +142,8 @@ func HttpCall(cluster Cluster, method, rawURL string, headers [][2]string, body 
 			}
 			headers.Add(h[0], h[1])
 		}
-		log.UnsafeInfof("http call end, id: %s, code: %d, normal: %t, body: %s",
-			requestID, code, normalResponse, strings.ReplaceAll(string(respBody), "\n", `\n`))
+		log.UnsafeInfof("http call end, id: %s, code: %d, normal: %t, body: %d",
+			requestID, code, normalResponse, len(respBody))
 		callback(code, headers, respBody)
 	})
 	if err == nil {
