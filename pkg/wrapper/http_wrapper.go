@@ -137,8 +137,8 @@ func HttpCall(cluster Cluster, method, rawURL string, headers [][2]string, body 
 			}
 			headers.Add(h[0], h[1])
 		}
-		proxywasm.LogDebugf("http call end, id: %s, code: %d, normal: %t, body: %s",
-			requestID, code, normalResponse, strings.ReplaceAll(string(respBody), "\n", `\n`))
+		proxywasm.LogDebugf("http call end, id: %s, code: %d, normal: %t",
+			requestID, code, normalResponse)
 		callback(code, headers, respBody)
 	})
 	if err == nil {
